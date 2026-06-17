@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Calculateur Droits de Douane — Importation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --navy:   #0B1E3D;
+      --gold:   #C8992A;
+      --gold-lt:#F0C84A;
+      --cream:  #F5F2EB;
+      --white:  #FFFFFF;
+      --ink:    #1A2C4A;
+      --muted:  #6B7FA3;
+      --line:   #D4C9A8;
+      --green:  #1A6B4A;
+      --shadow: 0 4px 24px rgba(11,30,61,0.10);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'IBM Plex Sans', sans-serif;
+      background: var(--cream);
+      color: var(--ink);
+      min-height: 100vh;
+    }
+
+    header {
+      background: var(--navy);
+      padding: 28px 40px 24px;
+      display: flex;
+      align-items: flex-end;
+      gap: 20px;
+    }
+
+    .stamp {
+      width: 54px; height: 54px;
+      border: 3px solid var(--gold);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .stamp svg { width: 28px; height: 28px; fill: var(--gold); }
+
+    .header-text h1 {
+      font-size: 1.35rem;
+      font-weight: 600;
+      color: var(--white);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .header-text p {
+      font-size: 0.78rem;
+      color: var(--gold);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-top: 3px;
+    }
+
+    main {
+      max-width: 680px;
+      margin: 40px auto;
+      padding: 0 20px 60px;
+    }
+
+    .input-card {
+      background: var(--white);
+      border-radius: 4px;
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+      padding: 32px 36px;
+      margin-bottom: 28px;
+    }
+
+    .input-card label {
+      display: block;
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+
+    .cif-row {
+      display: flex;
+      align-items: stretch;
+    }
+
+    .cif-row input {
+      flex: 1;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--navy);
+      border: 2px solid var(--navy);
+      border-right: none;
+      border-radius: 4px 0 0 4px;
+      padding: 14px 18px;
+      background: var(--cream);
+      outline: none;
+      transition: border-color .2s;
+    }
+    .cif-row input:focus { border-color: var(--gold); background: var(--white); }
+    .cif-row input::placeholder { color: var(--line); font-weight: 400; }
+
+    .currency-badge {
+      background: var(--navy);
+      color: var(--gold);
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.9rem;
+      font-weight: 600;
+      padding: 14px 20px;
+      border-radius: 0 4px 4px 0;
+      display: flex; align-items: center;
+      letter-spacing: 0.08em;
+      white-space: nowrap;
+    }
+
+    .cif-preview {
+      margin-top: 10px;
+      font-size: 0.78rem;
+      color: var(--muted);
+      font-family: 'IBM Plex Mono', monospace;
+      min-height: 1.2em;
+    }
+    .cif-preview span { color: var(--navy); font-weight: 600; }
+
+    .input-hint {
+      margin-top: 6px;
+      font-size: 0.70rem;
+      color: var(--muted);
+      font-style: italic;
+    }
+
+    .error-msg {
+      margin-top: 8px;
+      font-size: 0.72rem;
+      color: #B03A2E;
+      font-weight: 500;
+      min-height: 1em;
+    }
+
+    .section-head {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .section-head .tag {
+      font-size: 0.68rem;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      background: var(--navy);
+      color: var(--gold);
+      padding: 4px 10px;
+      border-radius: 2px;
+    }
+    .section-head h2 {
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--muted);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .tax-table {
+      background: var(--white);
+      border-radius: 4px;
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      margin-bottom: 28px;
+    }
+
+    .tax-row {
+      display: grid;
+      grid-template-columns: 1fr 160px;
+      align-items: center;
+      padding: 13px 20px;
+      border-bottom: 1px solid #EEE8D9;
+      transition: background .15s;
+    }
+    .tax-row:last-child { border-bottom: none; }
+    .tax-row:hover { background: #FAFAF5; }
+
+    .tax-row.header {
+      background: var(--navy);
+      color: var(--gold);
+      font-size: 0.65rem;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      padding: 10px 20px;
+    }
+    .tax-row.header:hover { background: var(--navy); }
+
+    .tax-name {
+      font-size: 0.83rem;
+      font-weight: 500;
+      color: var(--ink);
+    }
+    .tax-amount {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--green);
+      text-align: right;
+    }
+    .tax-amount.zero { color: var(--muted); }
+
+    .subtotal-row {
+      display: grid;
+      grid-template-columns: 1fr 160px;
+      align-items: center;
+      padding: 14px 20px;
+      background: #F0EBD8;
+      border-top: 2px solid var(--line);
+    }
+    .subtotal-row .label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.10em;
+      text-transform: uppercase;
+      color: var(--navy);
+    }
+    .subtotal-row .value {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--navy);
+      text-align: right;
+    }
+
+    .comp-table {
+      background: var(--white);
+      border-radius: 4px;
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      margin-bottom: 28px;
+    }
+
+    .comp-note {
+      font-size: 0.73rem;
+      color: var(--muted);
+      padding: 12px 20px;
+      background: #FAFAF5;
+      border-top: 1px solid var(--line);
+      font-style: italic;
+    }
+
+    .total-card {
+      background: var(--navy);
+      border-radius: 4px;
+      padding: 28px 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .total-card .total-label {
+      color: var(--gold);
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+    .total-card .total-sub {
+      color: var(--white);
+      font-size: 0.82rem;
+      margin-top: 4px;
+      opacity: 0.7;
+    }
+    .total-card .total-amount {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 2rem;
+      font-weight: 600;
+      color: var(--gold-lt);
+      text-align: right;
+    }
+    .total-card .total-millions {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.78rem;
+      color: var(--gold);
+      opacity: 0.8;
+      text-align: right;
+      margin-top: 4px;
+    }
+
+    footer {
+      text-align: center;
+      padding: 20px;
+      font-size: 0.68rem;
+      color: var(--muted);
+      letter-spacing: 0.06em;
+    }
+
+    @media (max-width: 560px) {
+      header { padding: 20px; }
+      .input-card { padding: 20px; }
+      .cif-row input { font-size: 1.1rem; }
+      .tax-row, .subtotal-row { padding: 11px 14px; }
+      .total-card { flex-direction: column; gap: 12px; text-align: center; }
+      .total-card .total-amount { font-size: 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="stamp">
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path d="M20 7H17V5C17 3.9 16.1 3 15 3H9C7.9 3 7 3.9 7 5V7H4C2.9 7 2 7.9 2 9V20C2 21.1 2.9 22 4 22H20C21.1 22 22 21.1 22 20V9C22 7.9 21.1 7 20 7ZM9 5H15V7H9V5ZM20 20H4V9H20V20ZM12 10C10.3 10 9 11.3 9 13C9 14.7 10.3 16 12 16C13.7 16 15 14.7 15 13C15 11.3 13.7 10 12 10ZM12 14C11.4 14 11 13.6 11 13C11 12.4 11.4 12 12 12C12.6 12 13 12.4 13 13C13 13.6 12.6 14 12 14Z"/>
+    </svg>
+  </div>
+  <div class="header-text">
+    <h1>Calculateur Droits de Douane</h1>
+    <p>Importation &nbsp;·&nbsp; XOF / CFA</p>
+  </div>
+</header>
+
+<main>
+
+  <!-- Valeur CIF -->
+  <div class="input-card">
+    <label>Valeur CIF — saisir en millions de XOF</label>
+    <div class="cif-row">
+      <input type="number" id="cif-millions" placeholder="ex : 5" min="1" step="1" oninput="calculate()" />
+      <div class="currency-badge">M XOF</div>
+    </div>
+    <div class="cif-preview" id="cif-preview">&nbsp;</div>
+    <div class="input-hint">Entrez le nombre de millions — ex : <strong>5</strong> pour 5 000 000 XOF</div>
+    <div class="error-msg" id="error-msg"></div>
+  </div>
+
+  <!-- Taxes principales -->
+  <div class="section-head">
+    <span class="tag">Taxes principales</span>
+    <h2>Calculées sur la valeur CIF</h2>
+  </div>
+
+  <div class="tax-table">
+    <div class="tax-row header">
+      <div>Taxe</div>
+      <div style="text-align:right">Montant (XOF)</div>
+    </div>
+
+    <div class="tax-row">
+      <div class="tax-name">DD — Droit de Douane</div>
+      <div class="tax-amount zero" id="dd">—</div>
+    </div>
+
+    <div class="tax-row">
+      <div class="tax-name">PC — Prélèvement Communautaire</div>
+      <div class="tax-amount zero" id="pc">—</div>
+    </div>
+
+    <div class="tax-row">
+      <div class="tax-name">PCS — Prélèvement Communautaire Solidarité</div>
+      <div class="tax-amount zero" id="pcs">—</div>
+    </div>
+
+    <div class="tax-row">
+      <div class="tax-name">RS — Redevance Statistique</div>
+      <div class="tax-amount zero" id="rs">—</div>
+    </div>
+
+    <div class="tax-row">
+      <div class="tax-name">IEC — Impôt sur Équivalent Communautaire</div>
+      <div class="tax-amount zero" id="iec">—</div>
+    </div>
+
+    <div class="tax-row">
+      <div class="tax-name">IGV — Impôt Général sur les Ventes (1ère phase)</div>
+      <div class="tax-amount zero" id="igv1">—</div>
+    </div>
+
+    <div class="tax-row">
+      <div class="tax-name">ACI — Acompte sur Cession d'Impôt</div>
+      <div class="tax-amount zero" id="aci">—</div>
+    </div>
+
+    <div class="subtotal-row">
+      <div class="label">Sous-total taxes principales</div>
+      <div class="value" id="subtotal1">—</div>
+    </div>
+  </div>
+
+  <!-- Taxes complémentaires -->
+  <div class="section-head">
+    <span class="tag">Taxes complémentaires</span>
+    <h2>Frais portuaires</h2>
+  </div>
+
+  <div class="comp-table">
+    <div class="tax-row header">
+      <div>Taxe</div>
+      <div style="text-align:right">Montant (XOF)</div>
+    </div>
+
+    <div class="tax-row">
+      <div class="tax-name">EPA — Entrée Port Angola</div>
+      <div class="tax-amount zero">— <span style="font-size:.7rem;color:var(--muted)">à saisir</span></div>
+    </div>
+
+    <div class="tax-row">
+      <div class="tax-name">Frais de débarquement</div>
+      <div class="tax-amount zero">— <span style="font-size:.7rem;color:var(--muted)">à saisir</span></div>
+    </div>
+
+    <div class="tax-row">
+      <div class="tax-name">EPA — Viatique</div>
+      <div class="tax-amount zero">— <span style="font-size:.7rem;color:var(--muted)">à saisir</span></div>
+    </div>
+
+    <div class="tax-row" style="border-bottom:none">
+      <div class="tax-name">Frais de débarquement — Viatique</div>
+      <div class="tax-amount zero">— <span style="font-size:.7rem;color:var(--muted)">à saisir</span></div>
+    </div>
+
+    <div class="subtotal-row">
+      <div class="label">Sous-total complémentaire</div>
+      <div class="value">—</div>
+    </div>
+    <div class="comp-note">
+      ℹ️ Ces frais portuaires varient selon chaque opération et doivent être ajoutés manuellement au total.
+    </div>
+  </div>
+
+  <!-- Total -->
+  <div class="total-card">
+    <div>
+      <div class="total-label">Total droits de douane</div>
+      <div class="total-sub">Taxes principales + complémentaires</div>
+    </div>
+    <div>
+      <div class="total-amount" id="total">—</div>
+      <div class="total-millions" id="total-millions">&nbsp;</div>
+    </div>
+  </div>
+
+</main>
+
+<footer>
+  Calculateur droits de douane &nbsp;·&nbsp; Importation &nbsp;·&nbsp; Taux en vigueur selon grille officielle
+</footer>
+
+<script>
+  function fmtXOF(n) {
+    return Math.round(n).toLocaleString('fr-FR') + ' XOF';
+  }
+
+  function fmtMillions(n) {
+    const m = n / 1_000_000;
+    return '≈ ' + m.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 3 }) + ' M XOF';
+  }
+
+  function setAmount(id, n) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = fmtXOF(n);
+    el.className = 'tax-amount' + (n === 0 ? ' zero' : '');
+  }
+
+  function reset() {
+    ['dd','pc','pcs','rs','iec','igv1','aci'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) { el.textContent = '—'; el.className = 'tax-amount zero'; }
+    });
+    document.getElementById('subtotal1').textContent = '—';
+    document.getElementById('total').textContent = '—';
+    document.getElementById('total-millions').textContent = '\u00A0';
+    document.getElementById('cif-preview').innerHTML = '\u00A0';
+  }
+
+  function calculate() {
+    const raw = document.getElementById('cif-millions').value.trim();
+    const errEl = document.getElementById('error-msg');
+    const previewEl = document.getElementById('cif-preview');
+
+    if (raw === '' || raw === null) {
+      errEl.textContent = '';
+      reset();
+      return;
+    }
+
+    const millions = parseFloat(raw);
+
+    if (isNaN(millions) || millions <= 0) {
+      errEl.textContent = 'Veuillez saisir un nombre entier positif.';
+      reset();
+      return;
+    }
+
+    if (!Number.isInteger(millions)) {
+      errEl.textContent = 'La valeur doit être un nombre entier de millions (pas de décimales).';
+      reset();
+      return;
+    }
+
+    errEl.textContent = '';
+
+    const cif = millions * 1_000_000;
+    previewEl.innerHTML = '= <span>' + cif.toLocaleString('fr-FR') + ' XOF</span>';
+
+    const dd   = cif * 0.20;
+    const pc   = cif * 0.005;
+    const pcs  = cif * 0.008;
+    const rs   = cif * 0.01;
+    const iec  = (cif + dd + pc + pcs + rs) * 0.10;
+    const igv1 = (cif + dd + pc + pcs + rs + iec) * 0.19;
+    const aci  = cif * 0.03;
+    const sub1 = dd + pc + pcs + rs + iec + igv1 + aci;
+
+    setAmount('dd',   dd);
+    setAmount('pc',   pc);
+    setAmount('pcs',  pcs);
+    setAmount('rs',   rs);
+    setAmount('iec',  iec);
+    setAmount('igv1', igv1);
+    setAmount('aci',  aci);
+
+    document.getElementById('subtotal1').textContent = fmtXOF(sub1);
+    document.getElementById('total').textContent = fmtXOF(sub1);
+    document.getElementById('total-millions').textContent = fmtMillions(sub1);
+  }
+</script>
+
+</body>
+</html>
